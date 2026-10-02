@@ -32,7 +32,8 @@ export default function AdminDashboard({
   const [activeTab, setActiveTab] = useState("projects");
   const [isSaving, setIsSaving] = useState(false);
 
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedAboutImage, setSelectedAboutImage] = useState(null);
+  const [selectedHeroImage, setSelectedHeroImage] = useState(null);
   const [selectedProjectImage, setSelectedProjectImage] = useState(null);
   const [selectedSkillImage, setSelectedSkillImage] = useState(null);
 
@@ -47,40 +48,52 @@ export default function AdminDashboard({
   const handleProjectSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    let finalImgUrl = form.img_url;
-    if (selectedProjectImage) {
-      const fileExt = selectedProjectImage.name.split(".").pop();
-      const fileName = `ds_project_${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage
-        .from("images")
-        .upload(fileName, selectedProjectImage);
-      if (error) {
-        alert("Gagal upload gambar. Error: " + error.message);
-        setIsSaving(false);
-        return;
+    try {
+      let finalImgUrl = form.img_url;
+      if (selectedProjectImage) {
+        const fileExt = selectedProjectImage.name.split(".").pop();
+        const fileName = `ds_project_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("images")
+          .upload(fileName, selectedProjectImage);
+        if (uploadError)
+          throw new Error("Gagal upload gambar: " + uploadError.message);
+        finalImgUrl = supabase.storage.from("images").getPublicUrl(fileName)
+          .data.publicUrl;
       }
-      finalImgUrl = supabase.storage.from("images").getPublicUrl(fileName)
-        .data.publicUrl;
+
+      const projectDataToSave = { ...form, img_url: finalImgUrl };
+
+      if (isEditingProject) {
+        const { error } = await supabase
+          .from("ds_projects")
+          .update(projectDataToSave)
+          .eq("id", projectDataToSave.id);
+        if (error) throw new Error(error.message);
+        alert("Project berhasil diperbarui!");
+      } else {
+        // Mengeluarkan 'id' agar Supabase tidak menolak data
+        const { id, ...newProject } = projectDataToSave;
+        newProject.sort_order = projects.length;
+        const { error } = await supabase
+          .from("ds_projects")
+          .insert([newProject]);
+        if (error) throw new Error(error.message);
+        alert("Project baru berhasil ditambahkan!");
+      }
+      setForm(emptyProjForm);
+      setSelectedProjectImage(null);
+      setIsEditingProject(false);
+      fetchData();
+    } catch (err) {
+      alert("TERJADI KESALAHAN: " + err.message);
+    } finally {
+      setIsSaving(false);
     }
-    const projectDataToSave = { ...form, img_url: finalImgUrl };
-    if (isEditingProject) {
-      await supabase
-        .from("ds_projects")
-        .update(projectDataToSave)
-        .eq("id", projectDataToSave.id);
-    } else {
-      projectDataToSave.sort_order = projects.length;
-      await supabase.from("ds_projects").insert([projectDataToSave]);
-    }
-    setForm(emptyProjForm);
-    setSelectedProjectImage(null);
-    setIsEditingProject(false);
-    setIsSaving(false);
-    fetchData();
   };
 
   const handleDeleteProject = async (id) => {
-    if (window.confirm("Yakin hapus?")) {
+    if (window.confirm("Yakin ingin menghapus project ini?")) {
       await supabase.from("ds_projects").delete().eq("id", id);
       fetchData();
     }
@@ -115,24 +128,35 @@ export default function AdminDashboard({
   const handleCertSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    if (isEditingCert) {
-      await supabase
-        .from("ds_certificates")
-        .update(certForm)
-        .eq("id", certForm.id);
-    } else {
-      const { id, ...newCert } = certForm;
-      newCert.sort_order = certificates.length;
-      await supabase.from("ds_certificates").insert([newCert]);
+    try {
+      if (isEditingCert) {
+        const { error } = await supabase
+          .from("ds_certificates")
+          .update(certForm)
+          .eq("id", certForm.id);
+        if (error) throw new Error(error.message);
+        alert("Sertifikat berhasil diperbarui!");
+      } else {
+        const { id, ...newCert } = certForm;
+        newCert.sort_order = certificates.length;
+        const { error } = await supabase
+          .from("ds_certificates")
+          .insert([newCert]);
+        if (error) throw new Error(error.message);
+        alert("Sertifikat baru berhasil ditambahkan!");
+      }
+      setCertForm(emptyCertForm);
+      setIsEditingCert(false);
+      fetchData();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsSaving(false);
     }
-    setCertForm(emptyCertForm);
-    setIsEditingCert(false);
-    setIsSaving(false);
-    fetchData();
   };
 
   const handleDeleteCert = async (id) => {
-    if (window.confirm("Yakin hapus?")) {
+    if (window.confirm("Yakin hapus sertifikat?")) {
       await supabase.from("ds_certificates").delete().eq("id", id);
       fetchData();
     }
@@ -163,44 +187,51 @@ export default function AdminDashboard({
     fetchData();
   };
 
-  // --- HANDLER SKILLS (BARU) ---
+  // --- HANDLER SKILLS ---
   const handleSkillSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    let finalLogoUrl = skillForm.logo_url;
-    if (selectedSkillImage) {
-      const fileExt = selectedSkillImage.name.split(".").pop();
-      const fileName = `ds_skill_${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage
-        .from("images")
-        .upload(fileName, selectedSkillImage);
-      if (error) {
-        alert("Error: " + error.message);
-        setIsSaving(false);
-        return;
+    try {
+      let finalLogoUrl = skillForm.logo_url;
+      if (selectedSkillImage) {
+        const fileExt = selectedSkillImage.name.split(".").pop();
+        const fileName = `ds_skill_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("images")
+          .upload(fileName, selectedSkillImage);
+        if (uploadError) throw new Error(uploadError.message);
+        finalLogoUrl = supabase.storage.from("images").getPublicUrl(fileName)
+          .data.publicUrl;
       }
-      finalLogoUrl = supabase.storage.from("images").getPublicUrl(fileName)
-        .data.publicUrl;
+      const skillDataToSave = { ...skillForm, logo_url: finalLogoUrl };
+
+      if (isEditingSkill) {
+        const { error } = await supabase
+          .from("ds_skills")
+          .update(skillDataToSave)
+          .eq("id", skillDataToSave.id);
+        if (error) throw new Error(error.message);
+        alert("Skill berhasil diperbarui!");
+      } else {
+        const { id, ...newSkill } = skillDataToSave;
+        newSkill.sort_order = skills.length;
+        const { error } = await supabase.from("ds_skills").insert([newSkill]);
+        if (error) throw new Error(error.message);
+        alert("Skill baru berhasil ditambahkan!");
+      }
+      setSkillForm(emptySkillForm);
+      setSelectedSkillImage(null);
+      setIsEditingSkill(false);
+      fetchData();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsSaving(false);
     }
-    const skillDataToSave = { ...skillForm, logo_url: finalLogoUrl };
-    if (isEditingSkill) {
-      await supabase
-        .from("ds_skills")
-        .update(skillDataToSave)
-        .eq("id", skillDataToSave.id);
-    } else {
-      skillDataToSave.sort_order = skills.length;
-      await supabase.from("ds_skills").insert([skillDataToSave]);
-    }
-    setSkillForm(emptySkillForm);
-    setSelectedSkillImage(null);
-    setIsEditingSkill(false);
-    setIsSaving(false);
-    fetchData();
   };
 
   const handleDeleteSkill = async (id) => {
-    if (window.confirm("Yakin hapus?")) {
+    if (window.confirm("Yakin hapus skill?")) {
       await supabase.from("ds_skills").delete().eq("id", id);
       fetchData();
     }
@@ -232,29 +263,52 @@ export default function AdminDashboard({
   const handleAboutSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    let finalPhotoUrl = aboutForm.photo_url;
-    if (selectedImage) {
-      const fileExt = selectedImage.name.split(".").pop();
-      const fileName = `ds_profile_${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage
-        .from("images")
-        .upload(fileName, selectedImage);
-      if (error) {
-        alert("Error: " + error.message);
-        setIsSaving(false);
-        return;
+    try {
+      let finalPhotoUrl = aboutForm.photo_url;
+      let finalHeroUrl = aboutForm.hero_photo_url;
+
+      if (selectedAboutImage) {
+        const fileExt = selectedAboutImage.name.split(".").pop();
+        const fileName = `ds_profile_${Date.now()}.${fileExt}`;
+        const { error } = await supabase.storage
+          .from("images")
+          .upload(fileName, selectedAboutImage);
+        if (error) throw new Error("Gagal upload foto about: " + error.message);
+        finalPhotoUrl = supabase.storage.from("images").getPublicUrl(fileName)
+          .data.publicUrl;
       }
-      finalPhotoUrl = supabase.storage.from("images").getPublicUrl(fileName)
-        .data.publicUrl;
+
+      if (selectedHeroImage) {
+        const fileExt = selectedHeroImage.name.split(".").pop();
+        const fileName = `ds_hero_${Date.now()}.${fileExt}`;
+        const { error } = await supabase.storage
+          .from("images")
+          .upload(fileName, selectedHeroImage);
+        if (error) throw new Error("Gagal upload foto hero: " + error.message);
+        finalHeroUrl = supabase.storage.from("images").getPublicUrl(fileName)
+          .data.publicUrl;
+      }
+
+      const { error } = await supabase
+        .from("ds_about_me")
+        .update({
+          ...aboutForm,
+          photo_url: finalPhotoUrl,
+          hero_photo_url: finalHeroUrl,
+        })
+        .eq("id", 1);
+
+      if (error) throw new Error(error.message);
+
+      setSelectedAboutImage(null);
+      setSelectedHeroImage(null);
+      fetchData();
+      alert("Halaman About Me berhasil diperbarui!");
+    } catch (err) {
+      alert("Kesalahan: " + err.message);
+    } finally {
+      setIsSaving(false);
     }
-    await supabase
-      .from("ds_about_me")
-      .update({ ...aboutForm, photo_url: finalPhotoUrl })
-      .eq("id", 1);
-    setSelectedImage(null);
-    setIsSaving(false);
-    fetchData();
-    alert("Berhasil disimpan!");
   };
 
   // --- STYLING ---
@@ -273,6 +327,7 @@ export default function AdminDashboard({
     background: "#121212",
     color: "#fff",
     fontFamily: "inherit",
+    boxSizing: "border-box",
   };
   const btnStyle = {
     padding: "1rem 2rem",
@@ -480,6 +535,17 @@ export default function AdminDashboard({
                   style={{ display: "block", color: "#fff" }}
                   required={!form.img_url}
                 />
+                {form.img_url && !selectedProjectImage && (
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#4caf50",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    ✓ Gambar sudah terpasang.
+                  </p>
+                )}
               </div>
               <input
                 type="url"
@@ -593,7 +659,6 @@ export default function AdminDashboard({
           </div>
         )}
 
-        {/* --- TAB SKILLS TICKER --- */}
         {activeTab === "skills" && (
           <div>
             <form
@@ -643,6 +708,17 @@ export default function AdminDashboard({
                   style={{ display: "block", color: "#fff" }}
                   required={!skillForm.logo_url}
                 />
+                {skillForm.logo_url && !selectedSkillImage && (
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#4caf50",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    ✓ Gambar sudah terpasang.
+                  </p>
+                )}
               </div>
               <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
                 <button type="submit" disabled={isSaving} style={btnStyle}>
@@ -928,31 +1004,86 @@ export default function AdminDashboard({
               required
               style={inputStyle}
             />
-            <div
-              style={{
-                border: "1px dashed #555",
-                padding: "1.5rem",
-                background: "#1a1a1a",
-                borderRadius: "4px",
-              }}
-            >
-              <label
+
+            {/* AREA UPLOAD DIBUAT DUA */}
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <div
                 style={{
-                  display: "block",
-                  fontWeight: "bold",
-                  marginBottom: "0.5rem",
-                  color: "#aaa",
+                  flex: 1,
+                  border: "1px dashed #555",
+                  padding: "1.5rem",
+                  background: "#1a1a1a",
+                  borderRadius: "4px",
                 }}
               >
-                Upload Foto Profil Baru (Akan tampil di Home):
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedImage(e.target.files[0])}
-                style={{ display: "block", color: "#fff" }}
-              />
+                <label
+                  style={{
+                    display: "block",
+                    fontWeight: "bold",
+                    marginBottom: "0.5rem",
+                    color: "#aaa",
+                  }}
+                >
+                  Upload Foto Project / Home:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedHeroImage(e.target.files[0])}
+                  style={{ display: "block", color: "#fff" }}
+                />
+                {aboutForm.hero_photo_url && !selectedHeroImage && (
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#4caf50",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    ✓ Gambar Hero terpasang.
+                  </p>
+                )}
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                  border: "1px dashed #555",
+                  padding: "1.5rem",
+                  background: "#1a1a1a",
+                  borderRadius: "4px",
+                }}
+              >
+                <label
+                  style={{
+                    display: "block",
+                    fontWeight: "bold",
+                    marginBottom: "0.5rem",
+                    color: "#aaa",
+                  }}
+                >
+                  Upload Foto About Me:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedAboutImage(e.target.files[0])}
+                  style={{ display: "block", color: "#fff" }}
+                />
+                {aboutForm.photo_url && !selectedAboutImage && (
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#4caf50",
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    ✓ Gambar About terpasang.
+                  </p>
+                )}
+              </div>
             </div>
+
             <textarea
               placeholder="Background / Description"
               value={aboutForm.description}
