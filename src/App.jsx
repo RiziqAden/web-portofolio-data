@@ -5,79 +5,32 @@ import AdminDashboard from "./AdminDashboard";
 import ScrollReveal from "./ScrollReveal";
 
 const cssAnimations = `
-  html, body {
-    margin: 0; padding: 0;
-    background-color: #121212; 
-    color: #f5f5f5; 
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    overflow-x: hidden;
-  }
-  
+  html, body { margin: 0; padding: 0; background-color: #121212; color: #f5f5f5; font-family: 'Helvetica Neue', Arial, sans-serif; overflow-x: hidden; }
   .ds-theme { background-color: #121212; min-height: 100vh; }
-  
   @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
   .page-transition { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-  
   .scroll-reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
   .scroll-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
-  /* --- HEADER & NAVBAR --- */
-  .ds-header {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 1.5rem 4rem;
-    position: sticky; top: 0; z-index: 1000;
-    background-color: rgba(18, 18, 18, 0.85); 
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid #333;
-    width: 100%; box-sizing: border-box; 
-  }
-  .ds-nav-link {
-    text-decoration: none; color: #888; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s;
-  }
+  .ds-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 4rem; position: sticky; top: 0; z-index: 1000; background-color: rgba(18, 18, 18, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #333; width: 100%; box-sizing: border-box; }
+  .ds-nav-link { text-decoration: none; color: #888; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; }
   .ds-nav-link:hover, .ds-nav-link.active { color: #fff; }
 
-  /* --- HERO LAYOUT KIRI KANAN --- */
-  .ds-hero-container {
-    display: flex; flex-direction: row; gap: 4rem; align-items: center; padding: 6rem 2rem 4rem 2rem; max-width: 1200px; margin: 0 auto;
-  }
-  .ds-hero-left { flex: 1; }
-  .ds-hero-right { flex: 1; }
-  
-  .ds-hero-title {
-    font-size: 2.8rem; font-weight: 500; line-height: 1.3; margin: 0 0 1.2rem 0; color: #fff; letter-spacing: -0.5px;
-  }
-  .ds-hero-subtitle {
-    font-size: 1.1rem; color: #888; line-height: 1.6; margin: 0;
-  }
-  
-  .ds-title {
-    font-size: clamp(2.5rem, 5vw, 4.5rem); 
-    font-weight: 500; 
-    line-height: 1.3; 
-    margin: 0; 
-    color: #fff; 
-    letter-spacing: -1px;
-  }
+  .ds-hero-container { display: flex; flex-direction: row; gap: 4rem; align-items: center; padding: 6rem 2rem 4rem 2rem; max-width: 1200px; margin: 0 auto; }
+  .ds-hero-left { flex: 1; } .ds-hero-right { flex: 1; }
+  .ds-hero-title { font-size: 2.8rem; font-weight: 500; line-height: 1.3; margin: 0 0 1.2rem 0; color: #fff; letter-spacing: -0.5px; }
+  .ds-hero-subtitle { font-size: 1.1rem; color: #888; line-height: 1.6; margin: 0; }
+  .ds-title { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 500; line-height: 1.3; margin: 0; color: #fff; letter-spacing: -1px; }
 
-  /* --- ANIMASI MARQUEE SKILL BERGERAK --- */
-  .ds-marquee-wrapper {
-    width: 100%; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 2.5rem 0; overflow: hidden; background: #121212; display: flex; align-items: center;
-  }
-  .ds-marquee-content {
-    display: flex; gap: 5rem; padding-right: 5rem; align-items: center;
-    animation: marquee 25s linear infinite;
-  }
+  .ds-marquee-wrapper { width: 100%; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 2.5rem 0; overflow: hidden; background: #121212; display: flex; align-items: center; }
+  .ds-marquee-content { display: flex; gap: 5rem; padding-right: 5rem; align-items: center; animation: marquee 25s linear infinite; }
   @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-  .ds-project-title { font-size: 2.2rem; font-weight: 500; text-transform: uppercase; margin: 0 0 1rem 0; letter-spacing: 1px; }
+  /* UKURAN FONT JUDUL PROJECT DIPERKECIL DI SINI (Dari 2.2rem menjadi 1.6rem) */
+  .ds-project-title { font-size: 1.6rem; font-weight: 500; text-transform: uppercase; margin: 0 0 1rem 0; letter-spacing: 1px; }
   .ds-tags { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 2px; line-height: 2; white-space: pre-line; }
   
-  .ds-btn-outline {
-    display: inline-block; padding: 0.8rem 2rem; border: 1px solid #555; background: transparent; color: #fff; 
-    font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.3s; border-radius: 4px;
-  }
+  .ds-btn-outline { display: inline-block; padding: 0.8rem 2rem; border: 1px solid #555; background: transparent; color: #fff; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.3s; border-radius: 4px; }
   .ds-btn-outline:hover { border-color: #fff; background: #fff; color: #000; }
 
   .ds-project-row { display: flex; flex-direction: row; border-bottom: 1px solid #333; padding: 5rem 0; gap: 4rem; }
@@ -105,7 +58,6 @@ const getEmbeddablePdfLink = (url) => {
   }
   return url;
 };
-
 const getDriveImageUrl = (url) => {
   if (!url) return "";
   if (url.includes("drive.google.com/file/d/")) {
@@ -125,6 +77,7 @@ export default function App() {
     nickname: "Riziq",
     role: "Data Scientist",
     photo_url: "",
+    hero_photo_url: "",
     description: "",
     skills: "",
     contact: "",
@@ -288,22 +241,20 @@ export default function App() {
       <div className="page-transition ds-theme">
         <style>{cssAnimations}</style>
         <Header />
-
         <ScrollReveal>
           <div className="ds-hero-container">
             <div className="ds-hero-left">
               <h1 className="ds-hero-title">
-                Hii, My name is {aboutData.nickname || "Riziq"} and I love Data.
+                Hii, my name is {aboutData.nickname || "Riziq"} and I love Data.
               </h1>
-              <p className="ds-hero-subtitle" style={{ fontSize: "24px" }}>
+              <p className="ds-hero-subtitle">
                 Exploring Data. Building Intelligent Solutions.
               </p>
             </div>
-
             <div className="ds-hero-right">
-              {aboutData.photo_url ? (
+              {aboutData.hero_photo_url || aboutData.photo_url ? (
                 <img
-                  src={aboutData.photo_url}
+                  src={aboutData.hero_photo_url || aboutData.photo_url}
                   alt="Profile"
                   style={{
                     width: "100%",
@@ -327,7 +278,7 @@ export default function App() {
                     color: "#666",
                   }}
                 >
-                  Upload Foto di Admin
+                  Upload Foto Hero di Admin
                 </div>
               )}
             </div>
@@ -416,7 +367,6 @@ export default function App() {
                 >
                   {aboutData.role}
                 </p>
-                {/* UKURAN FONT NAMA DIPERKECIL DI SINI */}
                 <h1
                   className="ds-title"
                   style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
@@ -495,7 +445,6 @@ export default function App() {
             </div>
           </ScrollReveal>
 
-          {/* LOGO SKILLS MARQUEE */}
           {skills.length > 0 && (
             <ScrollReveal>
               <div
@@ -621,7 +570,6 @@ export default function App() {
           >
             &larr; Back to Project
           </button>
-
           <ScrollReveal>
             <h1 className="ds-title" style={{ marginBottom: "1rem" }}>
               {activeProject.title}
@@ -638,7 +586,6 @@ export default function App() {
               {activeProject.description}
             </p>
           </ScrollReveal>
-
           {activeProject.link_url && (
             <ScrollReveal>
               <a
@@ -652,7 +599,6 @@ export default function App() {
               </a>
             </ScrollReveal>
           )}
-
           <ScrollReveal>
             {activeProject.pdf_url ? (
               <div
